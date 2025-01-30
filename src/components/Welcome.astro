@@ -7,7 +7,7 @@ const sql = neon(import.meta.env.DATABASE_URL);
 const etiquetas = await sql`SELECT * FROM public.alimentos ORDER BY nombre ASC;`;
 ---
 
-<h1>Lista de Etiquetas</h1>
+<h1>Lista de alimentos</h1>
 <ul>
   {etiquetas.map((etiqueta) => (
     <li>{etiqueta.nombre}</li> 
