@@ -1,0 +1,15 @@
+---
+import { neon } from "@neondatabase/serverless";
+
+const sql = neon(import.meta.env.DATABASE_URL);
+
+// Consultamos las etiquetas
+const etiquetas = await sql`SELECT * FROM public.alimentos ORDER BY nombre ASC;`;
+---
+
+<h1>Lista de Etiquetas</h1>
+<ul>
+  {etiquetas.map((etiqueta) => (
+    <li>{etiqueta.nombre}</li> 
+  ))}
+</ul>
