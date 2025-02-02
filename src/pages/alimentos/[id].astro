@@ -1,0 +1,98 @@
+---
+import { neon } from "@neondatabase/serverless";
+
+// Función para obtener los `id` de todos los alimentos desde la base de datos
+export async function getStaticPaths() {
+  const sql = neon(import.meta.env.DATABASE_URL);
+
+  // Consulta para obtener todos los IDs de los alimentos
+  const alimentos = await sql`
+    SELECT id
+    FROM public.alimentos;
+  `;
+
+  // Devolver las rutas dinámicas que Astro debe prerenderizar
+  return alimentos.map((alimento) => ({
+    params: { id: alimento.id.toString() }, // Cada ruta tendrá un parámetro `id`
+  }));
+}
+
+// Obtener el `id` de la URL y consultar los componentes
+const { id } = Astro.params;
+const sql = neon(import.meta.env.DATABASE_URL);
+
+// Consulta para obtener los detalles del alimento y sus componentes
+const alimento = await sql`
+SELECT 
+  a.nombre AS alimento_nombre, 
+  g.nombre AS grupo, 
+  c.nombre AS componente, 
+  ac.valor,
+  c.unidad,
+  ac.fuente
+FROM public.alimentos a
+LEFT JOIN public.grupos_alimentos g ON a.grupo_id = g.id
+LEFT JOIN public.alimento_componentes ac ON a.id = ac.alimento_id
+LEFT JOIN public.componentes c ON ac.componente_id = c.id
+WHERE a.id = ${id}
+ORDER BY c.id ASC;
+`;
+---
+
+<meta charset="UTF-8" />
+
+<div class="container mx-auto p-4">
+  <!-- Encabezado y Botón en la misma línea -->
+  <div class="flex items-center justify-between mb-4">
+    <h1 class="text-3xl font-bold">
+      {alimento[0]?.alimento_nombre || "Alimento no encontrado"}
+    </h1>
+
+    <!-- Botón para volver a la lista de alimentos -->
+    <a
+      href="/"
+      class="inline-block bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600"
+    >
+      Volver a la lista
+    </a>
+  </div>
+
+  <h2 class="text-xl mb-2">Grupo: {alimento[0]?.grupo || "Sin grupo"}</h2>
+
+  <table class="min-w-full bg-white border rounded-lg overflow-hidden">
+    <thead class="bg-gray-100">
+      <tr>
+        <th
+          class="px-6 py-3 border-b-2 border-gray-300 text-left text-sm font-semibold"
+          >Componente</th
+        >
+        <th
+          class="px-6 py-3 border-b-2 border-gray-300 text-left text-sm font-semibold"
+          >Valor</th
+        >
+        <th
+          class="px-6 py-3 border-b-2 border-gray-300 text-left text-sm font-semibold"
+          >Unidad</th
+        >
+        <th
+          class="px-6 py-3 border-b-2 border-gray-300 text-left text-sm font-semibold"
+          >Fuente</th
+        >
+      </tr>
+    </thead>
+    <tbody>
+      {
+        alimento.map((item) => (
+          <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4 border-b border-gray-200">
+              {item.componente}
+            </td>
+            <td class="px-6 py-4 border-b border-gray-200">{item.valor}</td>
+            <td class="px-6 py-4 border-b border-gray-200">{item.unidad}</td>
+            <td class="px-6 py-4 border-b border-gray-200">{item.fuente}</td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+</div>

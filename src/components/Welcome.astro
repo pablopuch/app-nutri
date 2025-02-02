@@ -3,13 +3,52 @@ import { neon } from "@neondatabase/serverless";
 
 const sql = neon(import.meta.env.DATABASE_URL);
 
-// Consultamos las etiquetas
-const etiquetas = await sql`SELECT * FROM public.alimentos ORDER BY nombre ASC;`;
+// Consulta con JOIN para obtener el nombre del grupo
+const alimentos = await sql`
+  SELECT 
+    a.id,
+    a.nombre, 
+    g.nombre AS grupo 
+  FROM public.alimentos a
+  LEFT JOIN public.grupos_alimentos g ON a.grupo_id = g.id
+  ORDER BY a.nombre ASC;
+`;
 ---
 
-<h1>Lista de alimentos</h1>
-<ul>
-  {etiquetas.map((etiqueta) => (
-    <li>{etiqueta.nombre}</li> 
-  ))}
-</ul>
+<div class="container mx-auto p-4">
+  <h1 class="text-3xl font-bold mb-4">Lista de alimentos</h1>
+
+  <table class="min-w-full bg-white border rounded-lg overflow-hidden">
+    <thead class="bg-gray-100">
+      <tr>
+        <th
+          class="px-6 py-3 border-b-2 border-gray-300 text-left text-sm font-semibold"
+          >Alimento</th
+        >
+        <th
+          class="px-6 py-3 border-b-2 border-gray-300 text-left text-sm font-semibold"
+          >Grupo</th
+        >
+      </tr>
+    </thead>
+    <tbody>
+      {
+        alimentos.map((alimento) => (
+          <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4 border-b border-gray-200">
+              <a
+                href={`/alimentos/${alimento.id}`}
+                class="text-blue-500 hover:underline"
+              >
+                {alimento.nombre}
+              </a>
+            </td>
+            <td class="px-6 py-4 border-b border-gray-200">
+              {alimento.grupo || "Sin grupo"}
+            </td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+</div>
